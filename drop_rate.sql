@@ -1,28 +1,15 @@
-/* retriving total usres as per total vists */
-select distinct Total_visits ,
- count( user_id), sum((select count( user_id))) over (order by Total_Visits desc) as cumulative from output group by Total_visits ;
+
+
+/* create temporary table*/
+CREATE TEMPORARY TABLE drop_rate(
+total_visits varchar(50), 
+customer int
+);
 
 
 
 
-/* retriving data as per output format and export to csv file */
-select 'Total_visits','Customer'
-union all 
-(select distinct Total_visits ,
- count( user_id), sum((select count( user_id))) over (order by Total_Visits desc) as cumulative from output group by Total_visits ; 
-) 
-INTO OUTFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/output2.csv'   
-FIELDS TERMINATED BY ','  
-ENCLOSED BY '"'   
-LINES TERMINATED BY '\n';
-
-
-
-
-
-
-
-
+/* creating procedure to calculate total visits and count of customer */
 
 DELIMITER $$
 CREATE PROCEDURE LoopDemo()
@@ -40,29 +27,33 @@ BEGIN
 		SET  x = x + 1;
 	END LOOP;
     insert into drop_rate
-        ((select 10 ,count(user_id) from output where Total_Visits > 9));
+        ((select '9+' ,count(user_id) from output where Total_Visits > 9));
 END$$
 
 
+
+/* procedure call */
 call LoopDemo();
 
 
-
-select distinct total_visits ,customer, sum(customer) over (order by Total_Visits desc) as cumulative, (select (select sum(customer) over (order by Total_Visits desc))/SUM(customer) * 100) AS percentage from drop_rate group by total_visits ;
+/* retriving data as per output format */
+select  distinct total_visits ,
+	customer, sum(customer) over (order by Total_Visits desc) as cumulative
+	from drop_rate 
+	group by total_visits ;
 
 
 
 /* retriving data as per output format and export to csv file */
-select 'Total_visits','Customer','cumulative','cumulative %'
+select 'Total_visits','Customer','cumulative'
 union all 
 (
 	select distinct total_visits ,
-	customer, sum(customer) over (order by Total_Visits desc), 
-	(select (select sum(customer) over (order by Total_Visits desc))/SUM(customer) * 100) 
+	customer, sum(customer) over (order by Total_Visits desc)
 	from drop_rate 
 	group by total_visits 
 ) 
-INTO OUTFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/output2.csv'   
+INTO OUTFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/drop_rate.csv'   
 FIELDS TERMINATED BY ','  
 ENCLOSED BY '"'   
 LINES TERMINATED BY '\n';
