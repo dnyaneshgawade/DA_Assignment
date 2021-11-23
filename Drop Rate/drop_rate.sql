@@ -12,7 +12,7 @@ customer int
 /* creating procedure to calculate total visits and count of customer */
 
 DELIMITER $$
-CREATE PROCEDURE LoopDemo()
+CREATE PROCEDURE LoopDemo1()
 BEGIN
 	DECLARE x  INT;
 	SET x = 1;
@@ -23,11 +23,24 @@ BEGIN
 		END  IF;
          
         insert into drop_rate
-        ((select Total_Visits,count(user_id) from output where Total_Visits = x)); 
-		SET  x = x + 1;
+        ((select x,(select count(SUBQUERY.user_id)
+	from
+	(select distinct user_id,sum(visit_rank) as total_visits
+	FROM transaction_log_loyalty
+	GROUP BY user_id)as SUBQUERY
+	where total_visits=x
+	))); 
+	SET  x = x + 1;
 	END LOOP;
-    insert into drop_rate
-        ((select '9+' ,count(user_id) from output where Total_Visits > 9));
+    
+	insert into drop_rate
+        ((select '9+' ,(select count(SUBQUERY.user_id)
+	from
+	(select distinct user_id,sum(visit_rank) as total_visits
+	FROM transaction_log_loyalty
+	GROUP BY user_id)as SUBQUERY
+	where total_visits>9
+	)));
 END$$
 
 
